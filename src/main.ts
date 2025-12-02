@@ -5,7 +5,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  if (process.env.ENV === "dev") {
+  if (process.env.NEXUS_ENV! === "dev") {
     const config = new DocumentBuilder()
       .setTitle("Nexus Scope API")
       .setDescription("Nexus Scope API documentation")
@@ -15,6 +15,6 @@ async function bootstrap() {
     SwaggerModule.setup("api", app, document);
   }
 
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(process.env.NEXUS_PORT!);
 }
 bootstrap();
