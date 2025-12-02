@@ -2,6 +2,8 @@ import { Module } from "@nestjs/common";
 import { HealthModule } from "./health/health.module";
 import { ClickhouseModule } from "./clickhouse/clickhouse.module";
 import { ConfigModule } from "@nestjs/config";
+import { AuthModule } from "./auth/auth.module";
+import { DatabaseModule } from "./database/database.module";
 
 @Module({
   imports: [
@@ -10,6 +12,8 @@ import { ConfigModule } from "@nestjs/config";
     }),
     HealthModule,
     ClickhouseModule,
+    AuthModule,
+    DatabaseModule,
   ],
   controllers: [],
   providers: [],

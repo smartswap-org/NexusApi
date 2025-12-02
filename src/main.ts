@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
 
   if (process.env.NEXUS_ENV! === "dev") {
     const config = new DocumentBuilder()
@@ -15,6 +16,6 @@ async function bootstrap() {
     SwaggerModule.setup("api", app, document);
   }
 
-  await app.listen(process.env.NEXUS_PORT!);
+  await app.listen(process.env.NEXUS_API_PORT || 8080);
 }
 bootstrap();

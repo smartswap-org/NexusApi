@@ -10,10 +10,10 @@ export class ClickhouseService implements OnModuleInit {
   constructor(private configService: ConfigService) { }
 
   async onModuleInit() {
-    const host = this.configService.get<string>("TRACE_DB_HOST");
-    const port = this.configService.get<number>("TRACE_DB_PORT");
-    const username = this.configService.get<string>("TRACE_DB_USERNAME");
-    const password = this.configService.get<string>("TRACE_DB_PASSWORD");
+    const host = this.configService.get<string>("CLICKHOUSE_HOST");
+    const port = this.configService.get<number>("CLICKHOUSE_PORT");
+    const username = this.configService.get<string>("CLICKHOUSE_USER");
+    const password = this.configService.get<string>("CLICKHOUSE_PASSWORD");
 
     this.client = createClient({
       url: `http://${host}:${port}`,
