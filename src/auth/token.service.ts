@@ -67,9 +67,11 @@ export class TokenService {
         );
         if (!rows[0]) return null;
 
-        // revoke old, create new (rotation)
+        // create new first, then revoke old (safer rotation)
+        const userId = rows[0].user_id;
+        const newToken = await this.createRefreshToken(userId, ip, ua);
         await this.db.query('UPDATE refresh_tokens SET is_revoked = TRUE WHERE token_hash = $1', [hash]);
-        return { userId: rows[0].user_id, newToken: await this.createRefreshToken(rows[0].user_id, ip, ua) };
+        return { userId, newToken };
     }
 
     // mark token as revoked (used on logout)
