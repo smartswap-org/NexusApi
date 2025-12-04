@@ -1,59 +1,50 @@
-import { Injectable, Inject, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { Pool } from 'pg';
-import * as bcrypt from 'bcryptjs';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { UserService } from '../user/user.service';
+import { TokenService } from './token.service';
+import type { AuthResult } from './auth.types';
 
 @Injectable()
 export class AuthService {
     constructor(
-        private jwtService: JwtService,
-        @Inject('DATABASE_POOL') private pool: Pool,
+        private readonly users: UserService,
+        private readonly tokens: TokenService
     ) { }
 
-    async validateUser(email: string, pass: string): Promise<any> {
-        const result = await this.pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        const user = result.rows[0];
+    async register(email: string, password: string, ip: string, userAgent: string): Promise<AuthResult> {
+        if (await this.users.findByEmail(email)) {
+            throw new ConflictException('Email already registered');
+        } // if we find a user with the same email, we throw a conflict exception
 
-        if (user && await bcrypt.compare(pass, user.password)) {
-            const { password, ...result } = user;
-            return result;
-        }
-        return null;
+        const user = await this.users.create(email, password); // create a new user
+        const { accessToken, refreshToken } = await this.tokens.createTokenPair(user.id, user.email, ip, userAgent);
+
+        return { accessToken, refreshToken, user: { id: user.id, email: user.email } }; // return the access token and refresh token and the user data
     }
 
-    async validateUserById(id: string): Promise<any> {
-        const result = await this.pool.query('SELECT * FROM users WHERE id = $1', [id]);
-        const user = result.rows[0];
-        if (user) {
-            const { password, ...result } = user;
-            return result;
-        }
-        return null;
-    }
+    async login(email: string, password: string, ip: string, userAgent: string): Promise<AuthResult> {
+        const user = await this.users.findByEmail(email); // find the user by email
 
-    async login(user: any) {
-        const payload = { username: user.email, sub: user.id };
-        return {
-            access_token: this.jwtService.sign(payload),
-            user: user,
-        };
-    }
-
-    async register(email: string, pass: string, username?: string) {
-        const normalizedEmail = email.toLowerCase().trim();
-
-        const existing = await this.pool.query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
-        if (existing.rows.length > 0) {
-            throw new UnauthorizedException('User already exists');
+        // generic error to prevent user enumeration
+        if (!user || user.status !== 'active' || !(await this.users.verifyPassword(user, password))) {
+            throw new UnauthorizedException('Invalid credentials'); // if the user is not found or the status is not active or the password is incorrect, we throw an unauthorized exception
         }
 
-        const hashedPassword = await bcrypt.hash(pass, 12);
+        const { accessToken, refreshToken } = await this.tokens.createTokenPair(user.id, user.email, ip, userAgent); // create a new token pair (means access token and refresh token)
+        return { accessToken, refreshToken, user: { id: user.id, email: user.email } }; // return the access token and refresh token and the user data
+    }
 
-        const result = await this.pool.query(
-            'INSERT INTO users (email, password, name) VALUES ($1, $2, $3) RETURNING id, email, name',
-            [normalizedEmail, hashedPassword, username || null]
-        );
+    async refresh(refreshToken: string, ip: string, userAgent: string): Promise<{ accessToken: string; refreshToken: string }> {
+        const result = await this.tokens.validateAndRotateRefreshToken(refreshToken, ip, userAgent); // validate the refresh token and rotate it
+        if (!result) throw new UnauthorizedException('Invalid refresh token'); // if the refresh token is invalid, we throw an unauthorized exception
 
-        return result.rows[0];
+        const user = await this.users.findById(result.userId); // find the user by id
+        if (!user || user.status !== 'active') throw new UnauthorizedException('User not active'); // if the user is not found or the status is not active, we throw an unauthorized exception
+
+        const accessToken = await this.tokens.generateAccessToken(user.id, user.email); // generate a new access token
+        return { accessToken, refreshToken: result.newToken }; // return the access token and the new refresh token
+    }
+
+    async logout(refreshToken: string): Promise<void> {
+        await this.tokens.revokeToken(refreshToken); // revoke the refresh token
     }
 }
