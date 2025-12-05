@@ -22,15 +22,19 @@ export class AuthService {
     }
 
     async login(email: string, password: string, ip: string, userAgent: string): Promise<AuthResult> {
-        const user = await this.users.findByEmail(email); // find the user by email
+        const user = await this.users.findByEmail(email);
 
-        // generic error to prevent user enumeration
         if (!user || user.status !== 'active' || !(await this.users.verifyPassword(user, password))) {
-            throw new UnauthorizedException('Invalid credentials'); // if the user is not found or the status is not active or the password is incorrect, we throw an unauthorized exception
+            const reason = !user ? 'user_not_found' : user.status !== 'active' ? 'user_inactive' : 'invalid_password';
+            await this.users.recordLoginAttempt(email, ip, null, false, reason);
+            throw new UnauthorizedException('Invalid credentials');
         }
 
-        const { accessToken, refreshToken } = await this.tokens.createTokenPair(user.id, user.email, ip, userAgent); // create a new token pair (means access token and refresh token)
-        return { accessToken, refreshToken, user: { id: user.id, email: user.email } }; // return the access token and refresh token and the user data
+        await this.users.recordLoginAttempt(email, ip, null, true);
+        await this.users.updateLastLogin(user.id);
+
+        const { accessToken, refreshToken } = await this.tokens.createTokenPair(user.id, user.email, ip, userAgent);
+        return { accessToken, refreshToken, user: { id: user.id, email: user.email } };
     }
 
     async refresh(refreshToken: string, ip: string, userAgent: string): Promise<{ accessToken: string; refreshToken: string }> {
@@ -46,5 +50,14 @@ export class AuthService {
 
     async logout(refreshToken: string): Promise<void> {
         await this.tokens.revokeToken(refreshToken); // revoke the refresh token
+    }
+
+    async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<{ success: boolean }> {
+        const user = await this.users.findById(userId);
+        if (!user || !(await this.users.verifyPassword(user, currentPassword))) {
+            throw new UnauthorizedException('Current password is incorrect');
+        }
+        await this.users.updatePassword(userId, newPassword);
+        return { success: true };
     }
 }

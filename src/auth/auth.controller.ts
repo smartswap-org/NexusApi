@@ -4,14 +4,15 @@ import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { getAuthContext } from './auth.context';
 
 @Controller('auth')
 export class AuthController {
-    private readonly cookieOpts: { httpOnly: boolean; secure: boolean; sameSite: 'strict'; path: string };
+    private readonly cookieOpts: { httpOnly: boolean; secure: boolean; sameSite: 'lax'; path: string };
 
     constructor(private readonly auth: AuthService, config: ConfigService) {
-        this.cookieOpts = { httpOnly: true, secure: config.get('NODE_ENV') === 'production', sameSite: 'strict', path: '/' };
+        this.cookieOpts = { httpOnly: true, secure: config.get('NODE_ENV') === 'production', sameSite: 'lax', path: '/' };
     }
 
     private setTokens(res: Response, access: string, refresh: string) {
@@ -82,5 +83,15 @@ export class AuthController {
             ? { authenticated: true, user: { id: ctx.userId, email: ctx.email } }
             : { authenticated: false };
         // return authenticated status and user data if authenticated, otherwise return false
+    }
+
+    @Post('change-password')
+    @HttpCode(HttpStatus.OK)
+    async changePassword(@Body() { currentPassword, newPassword }: ChangePasswordDto) {
+        const ctx = getAuthContext();
+        if (!ctx.isAuthenticated || !ctx.userId) {
+            throw new UnauthorizedException('Not authenticated');
+        }
+        return this.auth.changePassword(ctx.userId, currentPassword, newPassword);
     }
 }

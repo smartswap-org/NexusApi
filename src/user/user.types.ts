@@ -3,4 +3,35 @@ export interface User {
     email: string;
     password_hash: string;
     status: 'active' | 'suspended' | 'deleted';
+    last_login: Date | null;
+    created_at: Date;
+    updated_at: Date;
+}
+
+export interface UserPublic {
+    id: string;
+    email: string;
+    status: 'active' | 'suspended' | 'deleted';
+    last_login: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface LoginAttempt {
+    id: string;
+    email: string;
+    ip_address: string;
+    device_fingerprint: string | null;
+    success: boolean;
+    failure_reason: string | null;
+    created_at: string;
+}
+
+export interface RateLimit {
+    id: string;
+    identifier: string;
+    identifier_type: string;
+    request_count: number;
+    window_start: string;
+    blocked_until: string | null;
 }
