@@ -22,6 +22,7 @@ export class UserController {
         return {
             id: user.id,
             email: user.email,
+            is_admin: user.is_admin,
             status: user.status,
             last_login: user.last_login?.toISOString() || null,
             created_at: user.created_at.toISOString(),

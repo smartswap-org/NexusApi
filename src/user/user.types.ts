@@ -2,6 +2,7 @@ export interface User {
     id: string;
     email: string;
     password_hash: string;
+    is_admin: boolean;
     status: 'active' | 'suspended' | 'deleted';
     last_login: Date | null;
     created_at: Date;
@@ -11,6 +12,7 @@ export interface User {
 export interface UserPublic {
     id: string;
     email: string;
+    is_admin: boolean;
     status: 'active' | 'suspended' | 'deleted';
     last_login: string | null;
     created_at: string;

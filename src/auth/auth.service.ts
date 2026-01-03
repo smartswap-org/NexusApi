@@ -16,9 +16,9 @@ export class AuthService {
         } // if we find a user with the same email, we throw a conflict exception
 
         const user = await this.users.create(email, password); // create a new user
-        const { accessToken, refreshToken } = await this.tokens.createTokenPair(user.id, user.email, ip, userAgent);
+        const { accessToken, refreshToken } = await this.tokens.createTokenPair(user.id, user.email, user.is_admin, ip, userAgent);
 
-        return { accessToken, refreshToken, user: { id: user.id, email: user.email } }; // return the access token and refresh token and the user data
+        return { accessToken, refreshToken, user: { id: user.id, email: user.email, is_admin: user.is_admin } }; // return the access token and refresh token and the user data
     }
 
     async login(email: string, password: string, ip: string, userAgent: string): Promise<AuthResult> {
@@ -33,8 +33,8 @@ export class AuthService {
         await this.users.recordLoginAttempt(email, ip, null, true);
         await this.users.updateLastLogin(user.id);
 
-        const { accessToken, refreshToken } = await this.tokens.createTokenPair(user.id, user.email, ip, userAgent);
-        return { accessToken, refreshToken, user: { id: user.id, email: user.email } };
+        const { accessToken, refreshToken } = await this.tokens.createTokenPair(user.id, user.email, user.is_admin, ip, userAgent);
+        return { accessToken, refreshToken, user: { id: user.id, email: user.email, is_admin: user.is_admin } };
     }
 
     async refresh(refreshToken: string, ip: string, userAgent: string): Promise<{ accessToken: string; refreshToken: string }> {
@@ -44,7 +44,7 @@ export class AuthService {
         const user = await this.users.findById(result.userId); // find the user by id
         if (!user || user.status !== 'active') throw new UnauthorizedException('User not active'); // if the user is not found or the status is not active, we throw an unauthorized exception
 
-        const accessToken = await this.tokens.generateAccessToken(user.id, user.email); // generate a new access token
+        const accessToken = await this.tokens.generateAccessToken(user.id, user.email, user.is_admin); // generate a new access token
         return { accessToken, refreshToken: result.newToken }; // return the access token and the new refresh token
     }
 

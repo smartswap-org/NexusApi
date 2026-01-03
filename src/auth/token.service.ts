@@ -29,14 +29,14 @@ export class TokenService {
     }
 
     // creates rs256 signed jwt
-    async generateAccessToken(userId: string, email: string) {
-        return this.jwt.sign({ sub: userId, email, type: 'access' } as TokenPayload);
+    async generateAccessToken(userId: string, email: string, is_admin: boolean) {
+        return this.jwt.sign({ sub: userId, email, is_admin, type: 'access' } as TokenPayload);
     }
 
     // create both tokens at once
-    async createTokenPair(userId: string, email: string, ip: string, ua: string) {
+    async createTokenPair(userId: string, email: string, is_admin: boolean, ip: string, ua: string) {
         return {
-            accessToken: await this.generateAccessToken(userId, email),
+            accessToken: await this.generateAccessToken(userId, email, is_admin),
             refreshToken: await this.createRefreshToken(userId, ip, ua),
         };
     }

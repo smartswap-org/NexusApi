@@ -15,7 +15,7 @@ export class AuthMiddleware implements NestMiddleware {
         if (token) {
             const payload = this.tokens.verifyAccessToken(token); // verify access token and return payload
             if (payload && await this.tokens.hasValidSession(payload.sub)) { // if payload is valid and user has a valid session
-                ctx = { isAuthenticated: true, userId: payload.sub, email: payload.email, tokenExp: payload.exp }; // set auth context
+                ctx = { isAuthenticated: true, userId: payload.sub, email: payload.email, is_admin: payload.is_admin, tokenExp: payload.exp }; // set auth context
             }
         }
 

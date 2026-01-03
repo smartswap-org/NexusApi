@@ -5,6 +5,7 @@ export interface AuthContext {
     isAuthenticated: boolean;
     userId?: string;
     email?: string;
+    is_admin?: boolean;
     tokenExp?: number; // token expiration timestamp
 }
 
@@ -22,10 +23,10 @@ export function isAuthenticated(): boolean {
 }
 
 // helper to get current user id (throws if not authenticated)
-export function requireAuth(): { userId: string; email: string } {
+export function requireAuth(): { userId: string; email: string; is_admin: boolean } {
     const ctx = getAuthContext();
     if (!ctx.isAuthenticated || !ctx.userId || !ctx.email) {
         throw new Error('Not authenticated');
     }
-    return { userId: ctx.userId, email: ctx.email };
+    return { userId: ctx.userId, email: ctx.email, is_admin: ctx.is_admin || false };
 }

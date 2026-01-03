@@ -80,7 +80,7 @@ export class AuthController {
     getSession() {
         const ctx = getAuthContext(); // get auth context from async local storage
         return ctx.isAuthenticated
-            ? { authenticated: true, user: { id: ctx.userId, email: ctx.email } }
+            ? { authenticated: true, user: { id: ctx.userId, email: ctx.email, is_admin: ctx.is_admin } }
             : { authenticated: false };
         // return authenticated status and user data if authenticated, otherwise return false
     }
