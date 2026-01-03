@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Req, Res, HttpCode, HttpStatus, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Req, Res, HttpCode, HttpStatus, UnauthorizedException, UseInterceptors } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
@@ -6,8 +6,10 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { getAuthContext } from './auth.context';
+import { CriticalAccessInterceptor, LogAccess } from '../security/access.interceptor';
 
 @Controller('auth')
+@UseInterceptors(CriticalAccessInterceptor)
 export class AuthController {
     private readonly cookieOpts: { httpOnly: boolean; secure: boolean; sameSite: 'lax'; path: string };
 
@@ -34,6 +36,7 @@ export class AuthController {
     }
 
     @Post('register')
+    @LogAccess()
     async register(@Body() { email, password }: RegisterDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const { ip, ua } = this.clientInfo(req); // get ip and user agent from request
         const result = await this.auth.register(email, password, ip, ua); // register user and return access token and refresh token
@@ -42,6 +45,7 @@ export class AuthController {
     }
 
     @Post('login')
+    @LogAccess()
     @HttpCode(HttpStatus.OK)
     async login(@Body() { email, password }: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
         const { ip, ua } = this.clientInfo(req); // get ip and user agent from request
@@ -77,6 +81,7 @@ export class AuthController {
     }
 
     @Get('session')
+    @LogAccess()
     getSession() {
         const ctx = getAuthContext(); // get auth context from async local storage
         return ctx.isAuthenticated
@@ -86,6 +91,7 @@ export class AuthController {
     }
 
     @Post('change-password')
+    @LogAccess()
     @HttpCode(HttpStatus.OK)
     async changePassword(@Body() { currentPassword, newPassword }: ChangePasswordDto) {
         const ctx = getAuthContext();
