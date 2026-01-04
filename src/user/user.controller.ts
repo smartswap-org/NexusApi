@@ -1,13 +1,16 @@
-import { Controller, Get, Query, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Query, UnauthorizedException, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { getAuthContext } from '../auth/auth.context';
 import type { UserPublic, LoginAttempt, RateLimit } from './user.types';
+import { CriticalAccessInterceptor, LogAccess } from '../security/access.interceptor';
 
 @Controller('user')
+@UseInterceptors(CriticalAccessInterceptor)
 export class UserController {
     constructor(private readonly users: UserService) { }
 
     @Get('info')
+    @LogAccess()
     async getUserInfo(): Promise<UserPublic> {
         const ctx = getAuthContext();
         if (!ctx.isAuthenticated || !ctx.userId) {
@@ -31,6 +34,7 @@ export class UserController {
     }
 
     @Get('login-attempts')
+    @LogAccess()
     async getLoginAttempts(@Query('limit') limit?: string): Promise<LoginAttempt[]> {
         const ctx = getAuthContext();
         if (!ctx.isAuthenticated || !ctx.email) {
@@ -42,6 +46,7 @@ export class UserController {
     }
 
     @Get('rate-limits')
+    @LogAccess()
     async getRateLimits(): Promise<RateLimit[]> {
         const ctx = getAuthContext();
         if (!ctx.isAuthenticated || !ctx.email) {
