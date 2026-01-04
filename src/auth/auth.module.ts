@@ -7,8 +7,11 @@ import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
 import { AuthMiddleware } from './auth.middleware';
 
+import { ClickhouseModule } from '../clickhouse/clickhouse.module';
+
 @Module({
     imports: [
+        ClickhouseModule,
         UserModule,
         JwtModule.registerAsync({
             imports: [ConfigModule],
