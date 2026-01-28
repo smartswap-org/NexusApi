@@ -44,7 +44,7 @@ class SharedTestModule { }
         ConfigModule.forRoot({
             isGlobal: true,
             load: [() => ({
-                NODE_ENV: 'test',
+                ENV: 'dev',
                 ACCESS_TOKEN_EXPIRY: '10m',
                 REFRESH_TOKEN_EXPIRY_DAYS: '7',
             })],

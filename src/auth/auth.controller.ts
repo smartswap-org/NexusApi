@@ -14,7 +14,7 @@ export class AuthController {
     private readonly cookieOpts: { httpOnly: boolean; secure: boolean; sameSite: 'lax'; path: string };
 
     constructor(private readonly auth: AuthService, config: ConfigService) {
-        this.cookieOpts = { httpOnly: true, secure: config.get('NODE_ENV') === 'production', sameSite: 'lax', path: '/' };
+        this.cookieOpts = { httpOnly: true, secure: config.get('ENV') === 'prod', sameSite: 'lax', path: '/' };
     }
 
     private setTokens(res: Response, access: string, refresh: string) {
