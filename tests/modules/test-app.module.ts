@@ -8,6 +8,9 @@ import { AuthService } from '../../src/auth/auth.service';
 import { TokenService } from '../../src/auth/token.service';
 import { AuthMiddleware } from '../../src/auth/auth.middleware';
 
+// clickhouse (mocked)
+import { ClickhouseService } from '../../src/clickhouse/clickhouse.service';
+
 // user components
 import { UserService } from '../../src/user/user.service';
 
@@ -32,9 +35,17 @@ import { TEST_PRIVATE_KEY, TEST_PUBLIC_KEY } from '../mockDb/keys';
     ],
     providers: [
         { provide: 'DATABASE_POOL', useValue: mockPool },
+        // CriticalAccessInterceptor depends on ClickhouseService; mock it for tests.
+        {
+            provide: ClickhouseService,
+            useValue: {
+                insert: async () => undefined,
+                query: async () => [],
+            },
+        },
         ConfigService,
     ],
-    exports: ['DATABASE_POOL', JwtModule, ConfigService],
+    exports: ['DATABASE_POOL', JwtModule, ConfigService, ClickhouseService],
 })
 class SharedTestModule { }
 

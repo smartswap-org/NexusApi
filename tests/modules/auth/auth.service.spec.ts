@@ -9,7 +9,7 @@ describe('AuthService', () => {
     let userService: jest.Mocked<UserService>;
     let tokenService: jest.Mocked<TokenService>;
 
-    const mockUser = { id: 'user-123', email: 'test@test.com', password_hash: 'hash', status: 'active' as const };
+    const mockUser = { id: 'user-123', email: 'test@test.com', password_hash: 'hash', status: 'active' as const, is_admin: false };
     const mockTokens = { accessToken: 'access', refreshToken: 'refresh' };
 
     beforeEach(async () => {
@@ -18,6 +18,8 @@ describe('AuthService', () => {
             findById: jest.fn(),
             create: jest.fn(),
             verifyPassword: jest.fn(),
+            recordLoginAttempt: jest.fn(),
+            updateLastLogin: jest.fn(),
         };
 
         const mockTokenService = {
