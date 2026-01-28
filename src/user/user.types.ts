@@ -7,6 +7,7 @@ export interface User {
     last_login: Date | null;
     created_at: Date;
     updated_at: Date;
+    binance_api_token: string | null;
 }
 
 export interface UserPublic {
@@ -17,6 +18,7 @@ export interface UserPublic {
     last_login: string | null;
     created_at: string;
     updated_at: string;
+    has_binance_token: boolean;
 }
 
 export interface LoginAttempt {

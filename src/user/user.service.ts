@@ -76,4 +76,21 @@ export class UserService {
             [email.toLowerCase(), ip, fingerprint, success, failureReason || null]
         );
     }
+
+    async setBinanceToken(userId: string, token: string | null): Promise<void> {
+        const hashed =
+            token === null
+                ? null
+                : await argon2.hash(token, {
+                      type: argon2.argon2id,
+                      memoryCost: 65536,
+                      timeCost: 3,
+                      parallelism: 4,
+                  });
+
+        await this.pool.query(
+            'UPDATE users SET binance_api_token = $1, updated_at = NOW() WHERE id = $2',
+            [hashed, userId]
+        );
+    }
 }
