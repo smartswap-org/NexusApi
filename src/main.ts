@@ -5,6 +5,13 @@ import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
+  const webUrl = process.env.WEB_URL;
+  if (!webUrl) throw new Error('WEB_URL must be set in .env');
+  const port = process.env.NEXUS_API_PORT;
+  if (!port) throw new Error('NEXUS_API_PORT must be set in .env');
+  const nexusEnv = process.env.NEXUS_ENV;
+  if (!nexusEnv) throw new Error('NEXUS_ENV must be set in .env');
+
   const app = await NestFactory.create(AppModule);
 
   app.use(cookieParser());
@@ -18,13 +25,13 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: process.env.WEB_URL,
+    origin: webUrl,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
   });
 
-  if (process.env.NEXUS_ENV === 'dev') {
+  if (nexusEnv === 'dev') {
     const config = new DocumentBuilder()
       .setTitle('Nexus Scope API')
       .setDescription('Nexus Scope API documentation')
@@ -35,6 +42,6 @@ async function bootstrap() {
     SwaggerModule.setup('api', app, document);
   }
 
-  await app.listen(process.env.NEXUS_API_PORT || 8080);
+  await app.listen(parseInt(port, 10));
 }
 bootstrap();
