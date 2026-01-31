@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Put, Query, UnauthorizedException, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Put, Query, UnauthorizedException, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { getAuthContext } from '../auth/auth.context';
-import type { UserPublic, LoginAttempt, RateLimit } from './user.types';
+import type { UserPublic, LoginAttempt, RateLimit, SecretKind } from './user.types';
 import { CriticalAccessInterceptor, LogAccess } from '../security/access.interceptor';
 
 @Controller('user')
@@ -31,6 +31,8 @@ export class UserController {
             created_at: user.created_at.toISOString(),
             updated_at: user.updated_at.toISOString(),
             has_binance_token: !!user.binance_api_token,
+            has_claude_token: !!user.claude_api_token,
+            has_grok_token: !!user.grok_api_token,
         };
     }
 
@@ -57,14 +59,22 @@ export class UserController {
         return this.users.getRateLimits(ctx.email);
     }
 
-    @Put('binance-token')
+    @Put('secret-token')
     @LogAccess()
-    async setBinanceToken(@Body('token') token: string | null): Promise<void> {
+    async setSecretToken(
+        @Body('kind') kind: SecretKind,
+        @Body('token') token: string | null
+    ): Promise<void> {
         const ctx = getAuthContext();
         if (!ctx.isAuthenticated || !ctx.userId) {
             throw new UnauthorizedException('Not authenticated');
         }
 
-        await this.users.setBinanceToken(ctx.userId, token || null);
+        const allowed: SecretKind[] = ['binance', 'claude', 'grok'];
+        if (!kind || !allowed.includes(kind)) {
+            throw new BadRequestException('Invalid secret kind');
+        }
+
+        await this.users.setSecretToken(ctx.userId, kind, token ?? null);
     }
 }

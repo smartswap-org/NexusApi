@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
 import * as argon2 from 'argon2';
-import type { User } from './user.types';
+import type { User, SecretKind } from './user.types';
 
 @Injectable()
 export class UserService {
@@ -77,7 +77,7 @@ export class UserService {
         );
     }
 
-    async setBinanceToken(userId: string, token: string | null): Promise<void> {
+    async setSecretToken(userId: string, kind: SecretKind, token: string | null): Promise<void> {
         const hashed =
             token === null
                 ? null
@@ -88,8 +88,9 @@ export class UserService {
                       parallelism: 4,
                   });
 
+        const column = kind === 'binance' ? 'binance_api_token' : kind === 'claude' ? 'claude_api_token' : 'grok_api_token';
         await this.pool.query(
-            'UPDATE users SET binance_api_token = $1, updated_at = NOW() WHERE id = $2',
+            `UPDATE users SET ${column} = $1, updated_at = NOW() WHERE id = $2`,
             [hashed, userId]
         );
     }

@@ -8,7 +8,11 @@ export interface User {
     created_at: Date;
     updated_at: Date;
     binance_api_token: string | null;
+    claude_api_token: string | null;
+    grok_api_token: string | null;
 }
+
+export type SecretKind = 'binance' | 'claude' | 'grok';
 
 export interface UserPublic {
     id: string;
@@ -19,6 +23,8 @@ export interface UserPublic {
     created_at: string;
     updated_at: string;
     has_binance_token: boolean;
+    has_claude_token: boolean;
+    has_grok_token: boolean;
 }
 
 export interface LoginAttempt {
