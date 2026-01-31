@@ -1,6 +1,5 @@
 import { Controller, Post, Get, Body, Req, Res, HttpCode, HttpStatus, UnauthorizedException, UseInterceptors } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -13,18 +12,18 @@ import { CriticalAccessInterceptor, LogAccess } from '../security/access.interce
 export class AuthController {
     private readonly cookieOpts: { httpOnly: boolean; secure: boolean; sameSite: 'lax'; path: string };
 
-    constructor(private readonly auth: AuthService, config: ConfigService) {
-        this.cookieOpts = { httpOnly: true, secure: config.get('ENV') === 'prod', sameSite: 'lax', path: '/' };
+    constructor(private readonly auth: AuthService) {
+        this.cookieOpts = { httpOnly: true, secure: false, sameSite: 'lax', path: '/' };
     }
 
     private setTokens(res: Response, access: string, refresh: string) {
-        res.cookie('access_token', access, { ...this.cookieOpts, maxAge: 10 * 60 * 1000 }); // max age of a access token : 10 mins 
-        res.cookie('refresh_token', refresh, { ...this.cookieOpts, maxAge: 7 * 24 * 60 * 60 * 1000 }); // max age of a refresh token : 1 week 
+        res.cookie('access_token', access, { ...this.cookieOpts, maxAge: 10 * 60 * 1000 });
+        res.cookie('refresh_token', refresh, { ...this.cookieOpts, maxAge: 7 * 24 * 60 * 60 * 1000 });
     }
 
     private clearTokens(res: Response) {
-        res.clearCookie('access_token', this.cookieOpts); // clear access token cookie
-        res.clearCookie('refresh_token', this.cookieOpts); // clear refresh token cookie
+        res.clearCookie('access_token', this.cookieOpts);
+        res.clearCookie('refresh_token', this.cookieOpts);
     }
 
     private clientInfo(req: Request) {
