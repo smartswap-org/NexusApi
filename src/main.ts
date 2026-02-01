@@ -9,8 +9,8 @@ async function bootstrap() {
   if (!webUrl) throw new Error('WEB_URL must be set in .env');
   const port = process.env.NEXUS_API_PORT;
   if (!port) throw new Error('NEXUS_API_PORT must be set in .env');
-  const nexusEnv = process.env.NEXUS_ENV;
-  if (!nexusEnv) throw new Error('NEXUS_ENV must be set in .env');
+  const env = process.env.ENV;
+  if (!env) throw new Error('ENV must be set in .env');
 
   const app = await NestFactory.create(AppModule);
 
@@ -31,7 +31,7 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
   });
 
-  if (nexusEnv === 'dev') {
+  if (env === 'dev') {
     const config = new DocumentBuilder()
       .setTitle('Nexus Scope API')
       .setDescription('Nexus Scope API documentation')
